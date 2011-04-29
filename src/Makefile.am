@@ -364,6 +364,14 @@ collectd_LDADD += "-dlopen" filecount.la
 collectd_DEPENDENCIES += filecount.la
 endif
 
+if BUILD_PLUGIN_FGLRX
+pkglib_LTLIBRARIES += fglrx.la
+fglrx_la_SOURCES = fglrx.c
+fglrx_la_LDFLAGS = -module -avoid-version -L/usr/lib64/catalyst -latiadlxx
+collectd_LDADD += "-dlopen" fglrx.la
+collectd_DEPENDENCIES += fglrx.la
+endif
+
 if BUILD_PLUGIN_GMOND
 pkglib_LTLIBRARIES += gmond.la
 gmond_la_SOURCES = gmond.c

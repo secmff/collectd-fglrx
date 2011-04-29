@@ -65,3 +65,6 @@ bindings/java/org/collectd/java/*.class
 
 # python stuff
 *.pyc
+
+# editor stuff
+*~

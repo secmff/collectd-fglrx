@@ -3984,6 +3984,7 @@ plugin_load="no"
 plugin_memory="no"
 plugin_multimeter="no"
 plugin_nfs="no"
+plugin_fglrx="no"
 plugin_fscache="no"
 plugin_perl="no"
 plugin_processes="no"
@@ -4016,6 +4017,7 @@ then
 	plugin_load="yes"
 	plugin_memory="yes"
 	plugin_nfs="yes"
+	plugin_fglrx="yes"
 	plugin_fscache="yes"
 	plugin_processes="yes"
 	plugin_protocols="yes"
@@ -4278,6 +4280,7 @@ AC_PLUGIN([email],       [yes],                [EMail statistics])
 AC_PLUGIN([entropy],     [$plugin_entropy],    [Entropy statistics])
 AC_PLUGIN([exec],        [yes],                [Execution of external programs])
 AC_PLUGIN([filecount],   [yes],                [Count files in directories])
+AC_PLUGIN([fglrx],       [$plugin_fglrx],      [fglrx GPU statistics])
 AC_PLUGIN([fscache],     [$plugin_fscache],    [fscache statistics])
 AC_PLUGIN([gmond],       [$with_libganglia],   [Ganglia plugin])
 AC_PLUGIN([hddtemp],     [yes],                [Query hddtempd])
@@ -4595,6 +4598,7 @@ Configuration:
     entropy . . . . . . . $enable_entropy
     exec  . . . . . . . . $enable_exec
     filecount . . . . . . $enable_filecount
+    fglrx . . . . . . . . $enable_fglrx
     fscache . . . . . . . $enable_fscache
     gmond . . . . . . . . $enable_gmond
     hddtemp . . . . . . . $enable_hddtemp
