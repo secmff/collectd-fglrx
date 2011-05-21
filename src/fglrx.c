@@ -32,6 +32,7 @@ extern int ADL_Adapter_NumberOfAdapters_Get(int *);
 extern int ADL_Adapter_AdapterInfo_Get(LPAdapterInfo, int);
 extern int ADL_Overdrive5_Temperature_Get(int, int, ADLTemperature *);
 extern int ADL_Overdrive5_CurrentActivity_Get(int, ADLPMActivity *);
+extern int ADL_Overdrive5_FanSpeed_Get(int, int, ADLFanSpeedValue *);
 extern int ADL_Adapter_ID_Get(int, int *);
 
 static LPAdapterInfo  ldAdapterInfo;
@@ -81,6 +82,20 @@ static int fglrx_read_performance(int i, value_list_t vl)
 	return(0);
 }
 
+static int fglrx_read_fanspeed(int i, value_list_t vl)
+{
+	ADLFanSpeedValue lpFanSpeedValue;
+	sstrncpy (vl.type, "fanspeed", sizeof (vl.type));
+	lpFanSpeedValue.iSpeedType = ADL_DL_FANCTRL_SPEED_TYPE_RPM;
+	if (ADL_OK != ADL_Overdrive5_FanSpeed_Get(i, 0, &lpFanSpeedValue)) {
+		WARNING("failed to get fanspeed for %d", i);
+		return(1);
+	}
+	vl.values[0].gauge = lpFanSpeedValue.iFanSpeed;
+	plugin_dispatch_values (&vl);
+	return(0);
+}
+
 static int fglrx_read(void)
 {
 	int i, adapter=0;
@@ -104,6 +119,7 @@ static int fglrx_read(void)
 			  sizeof (vl.type_instance));
 		fglrx_read_temperature(i, vl);
 		fglrx_read_performance(i, vl);
+		fglrx_read_fanspeed(i, vl);
 		adapter++;
 	}
 	return(0);
