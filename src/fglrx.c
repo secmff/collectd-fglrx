@@ -88,7 +88,6 @@ static int fglrx_read_fanspeed(int i, value_list_t vl)
 	sstrncpy (vl.type, "fanspeed", sizeof (vl.type));
 	lpFanSpeedValue.iSpeedType = ADL_DL_FANCTRL_SPEED_TYPE_RPM;
 	if (ADL_OK != ADL_Overdrive5_FanSpeed_Get(i, 0, &lpFanSpeedValue)) {
-		WARNING("failed to get fanspeed for %d", i);
 		return(1);
 	}
 	vl.values[0].gauge = lpFanSpeedValue.iFanSpeed;
