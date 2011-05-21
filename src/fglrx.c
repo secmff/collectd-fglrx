@@ -31,6 +31,7 @@ extern int ADL_Main_Control_Create(void *, int);
 extern int ADL_Adapter_NumberOfAdapters_Get(int *);
 extern int ADL_Adapter_AdapterInfo_Get(LPAdapterInfo, int);
 extern int ADL_Overdrive5_Temperature_Get(int, int, ADLTemperature *);
+extern int ADL_Overdrive5_CurrentActivity_Get(int, ADLPMActivity *);
 extern int ADL_Adapter_ID_Get(int, int *);
 
 static LPAdapterInfo  ldAdapterInfo;
@@ -67,6 +68,19 @@ static int fglrx_read_temperature(int i, value_list_t vl)
 	return(0);
 }
 
+static int fglrx_read_performance(int i, value_list_t vl)
+{
+	ADLPMActivity lpActivity;
+	sstrncpy (vl.type, "percent", sizeof (vl.type));
+	if (ADL_OK != ADL_Overdrive5_CurrentActivity_Get(i, &lpActivity)) {
+		WARNING("failed to get activity for %d", i);
+		return(1);
+	}
+	vl.values[0].gauge = lpActivity.iActivityPercent;
+	plugin_dispatch_values (&vl);
+	return(0);
+}
+
 static int fglrx_read(void)
 {
 	int i, adapter=0;
@@ -89,6 +103,7 @@ static int fglrx_read(void)
 		sstrncpy (vl.type_instance, type_instance,
 			  sizeof (vl.type_instance));
 		fglrx_read_temperature(i, vl);
+		fglrx_read_performance(i, vl);
 		adapter++;
 	}
 	return(0);
