@@ -33,6 +33,9 @@ extern int ADL_Adapter_AdapterInfo_Get(LPAdapterInfo, int);
 extern int ADL_Overdrive5_Temperature_Get(int, int, ADLTemperature *);
 extern int ADL_Adapter_ID_Get(int, int *);
 
+static LPAdapterInfo  ldAdapterInfo;
+static int            iNumberAdapters;
+
 /* Memory allocation functions */
 void* ADL_Main_Memory_Alloc ( int iSize )
 {
@@ -48,17 +51,51 @@ void  ADL_Main_Memory_Free ( void ** lpBuffer )
 	}
 }
 
+static int fglrx_read_temperature(int i, value_list_t vl)
+{
+	ADLTemperature lpTemperature;
+
+	sstrncpy (vl.type, "temperature", sizeof (vl.type));
+
+	if (ADL_OK != ADL_Overdrive5_Temperature_Get(i, 0, &lpTemperature)) {
+		WARNING("failed to get temperature for %d", i);
+		return(1);
+	}
+
+	vl.values[0].gauge = (float)lpTemperature.iTemperature/1000;
+	plugin_dispatch_values (&vl);
+	return(0);
+}
+
 static int fglrx_read(void)
 {
+	int i, adapter=0;
+	value_t values[1];
+	value_list_t vl = VALUE_LIST_INIT;
+	char type_instance[DATA_MAX_NAME_LEN];
+
+	vl.values = values;
+	vl.values_len = 1;
+
+	sstrncpy (vl.host, hostname_g, sizeof (vl.host));
+	sstrncpy (vl.plugin, "fglrx", sizeof (vl.plugin));
+
+	for (i=0; i<iNumberAdapters; i++) {
+		if ( ldAdapterInfo[i].iDrvIndex != 0 ) {
+			continue;
+		}
+		
+		sprintf(type_instance, "Adapter/%d", adapter);
+		sstrncpy (vl.type_instance, type_instance,
+			  sizeof (vl.type_instance));
+		fglrx_read_temperature(i, vl);
+		adapter++;
+	}
 	return(0);
 }
 
 void module_register (void)
 {
-	int            iNumberAdapters, i;
-	LPAdapterInfo  ldAdapterInfo;
-	ADLTemperature lpTemperature;
-
 	if ( ADL_OK != ADL_Main_Control_Create((*ADL_Main_Memory_Alloc), 1)) {
 		ERROR("unable to init fglrx");
 		return;
@@ -71,8 +108,6 @@ void module_register (void)
 		WARNING("no fglrx adapters found");
 		return;
 	}
-	printf("Number of adapters: %d\n", iNumberAdapters);
-
 	ldAdapterInfo = (LPAdapterInfo) malloc(sizeof(AdapterInfo) * 
 					       iNumberAdapters);
 	if ( ADL_OK != ADL_Adapter_AdapterInfo_Get(
@@ -80,26 +115,6 @@ void module_register (void)
 		     sizeof(AdapterInfo) * iNumberAdapters)) {
 		ERROR("unable to get adapter info");
 		return;
-	}
-
-	for (i=0; i<iNumberAdapters; i++) {
-		if ( ldAdapterInfo[i].iDrvIndex != 0 ) {
-			continue;
-		}
-
-		printf("strAdapterName:%s (%d:%d.%d) -> %d\n",
-		       ldAdapterInfo[i].strAdapterName,
-		       ldAdapterInfo[i].iBusNumber,
-		       ldAdapterInfo[i].iDeviceNumber,
-		       ldAdapterInfo[i].iFunctionNumber,
-		       ldAdapterInfo[i].iDrvIndex);
-		if (ADL_OK != ADL_Overdrive5_Temperature_Get(i, 0,
-							     &lpTemperature)) {
-			printf("failed to get temp\n");
-			continue;
-		}
-		printf("temp   :       %0.2f\n",
-		       (float)lpTemperature.iTemperature/1000);
 	}
 
 	plugin_register_read ("load", fglrx_read);
